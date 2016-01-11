@@ -69,7 +69,6 @@ function utf8rewind.utf8toupper (input) return process(input, "utf8toupper")  en
 function utf8rewind.utf8tolower (input) return process(input, "utf8tolower")  end
 function utf8rewind.utf8totitle (input) return process(input, "utf8totitle")  end
 function utf8rewind.utf8casefold(input) return process(input, "utf8casefold") end
-function utf8rewind.utf8casefold(input) return process(input, "utf8casefold") end
 function utf8rewind.utf16toutf8 (input) return process(input, "utf16toutf8")  end
 function utf8rewind.utf32toutf8 (input) return process(input, "utf32toutf8")  end
 function utf8rewind.widetoutf8  (input) return process(input, "widetoutf8")   end

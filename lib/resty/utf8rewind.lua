@@ -80,6 +80,7 @@ function utf8rewind.utf8normalize(input, flags)
     if type(flags) == "string" then
         flags = FLAGS[flags]
     end
+    assert(type(flags) == "number", "Invalid normalization flags supplied.")
     return process(input, "utf8normalize", nil, flags)
 end
 function utf8rewind.utf8isnormalized(input, flags)

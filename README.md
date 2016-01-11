@@ -6,7 +6,7 @@ LuaJIT FFI bindings for utf8rewind - a system library written in C designed to e
 `lua-resty-utf8rewind` uses two clause BSD license.
 
 ```
-Copyright (c) 2013, Aapo Talvensaari
+Copyright (c) 2016, Aapo Talvensaari
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,

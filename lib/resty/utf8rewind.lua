@@ -45,7 +45,6 @@ local FLAGS = {
       KD = 6,
     NFKD = 6
 }
-local utf8rewind = { maybe = {} }
 local function process(input, func, target_t, flags)
     local t = target_t or char_t
     local l = type(input) == "cdata" and ffi_sizeof(input) or #input
@@ -64,6 +63,7 @@ local function process(input, func, target_t, flags)
     end
     return nil, errors[0]
 end
+local utf8rewind = { maybe = {} }
 function utf8rewind.utf8len     (input) return tonumber(lib.utf8len(input))   end
 function utf8rewind.utf8toupper (input) return process(input, "utf8toupper")  end
 function utf8rewind.utf8tolower (input) return process(input, "utf8tolower")  end

@@ -25,6 +25,7 @@ typedef int64_t off_t;
  size_t utf8toutf32(const char* input, size_t inputSize, unicode_t* target, size_t targetSize, int32_t* errors);
  size_t utf8towide(const char* input, size_t inputSize, wchar_t* target, size_t targetSize, int32_t* errors);
 uint8_t utf8isnormalized(const char* input, size_t inputSize, size_t flags, size_t* offset);
+ size_t utf8iscategory(const char* input, size_t inputSize, size_t flags);
  size_t utf8normalize(const char* input, size_t inputSize, char* target, size_t targetSize, size_t flags, int32_t* errors);
 const char* utf8seek(const char* text, size_t textSize, const char* textStart, off_t offset, int direction);
 ]]
@@ -35,7 +36,7 @@ local char_t = ffi_typeof      "char[?]"
 local utf16t = ffi_typeof   "utf16_t[?]"
 local unicod = ffi_typeof "unicode_t[?]"
 local wchart = ffi_typeof   "wchar_t[?]"
-local FLAGS = {
+local FORM = {
        C = 1,
      NFC = 1,
        D = 2,
@@ -44,6 +45,59 @@ local FLAGS = {
     NFKC = 5,
       KD = 6,
     NFKD = 6
+}
+local CATEGORY = {
+    LETTER_UPPERCASE        = 1,
+    LETTER_LOWERCASE        = 2,
+    LETTER_TITLECASE        = 4,
+    LETTER_MODIFIER         = 8,
+    CASE_MAPPED             = 7,
+    LETTER_OTHER            = 16,
+    LETTER                  = 31,
+    MARK_NON_SPACING        = 32,
+    MARK_SPACING            = 64,
+    MARK_ENCLOSING          = 128,
+    MARK                    = 224,
+    NUMBER_DECIMAL          = 256,
+    NUMBER_LETTER           = 512,
+    NUMBER_OTHER            = 1024,
+    NUMBER                  = 1792,
+    PUNCTUATION_CONNECTOR   = 2048,
+    PUNCTUATION_DASH        = 4096,
+    PUNCTUATION_OPEN        = 8192,
+    PUNCTUATION_CLOSE       = 16384,
+    PUNCTUATION_INITIAL     = 32768,
+    PUNCTUATION_FINAL       = 65536,
+    PUNCTUATION_OTHER       = 131072,
+    PUNCTUATION             = 260096,
+    SYMBOL_MATH             = 262144,
+    SYMBOL_CURRENCY         = 524288,
+    SYMBOL_MODIFIER         = 1048576,
+    SYMBOL_OTHER            = 2097152,
+    SYMBOL                  = 3932160,
+    SEPARATOR_SPACE         = 4194304,
+    SEPARATOR_LINE          = 8388608,
+    SEPARATOR_PARAGRAPH     = 16777216,
+    SEPARATOR               = 29360128,
+    CONTROL                 = 33554432,
+    FORMAT                  = 67108864,
+    SURROGATE               = 134217728,
+    PRIVATE_USE             = 268435456,
+    UNASSIGNED              = 536870912,
+    COMPATIBILITY           = 1073741824,
+    ISUPPER                 = 1073741825,
+    ISLOWER                 = 1073741826,
+    ISALPHA                 = 1073741855,
+    ISDIGIT                 = 1073743616,
+    ISALNUM                 = 1073743647,
+    ISPUNCT                 = 1077934080,
+    ISGRAPH                 = 1077935903,
+    ISSPACE                 = 1077936128,
+    ISPRINT                 = 1107296031,
+    ISCNTRL                 = 1107296256,
+    ISXDIGIT                = 1342179072,
+    ISBLANK                 = 1346371584,
+    IGNORE_GRAPHEME_CLUSTER = 2147483648
 }
 local function process(input, func, target_t, flags)
     local t = target_t or char_t
@@ -76,17 +130,17 @@ function utf8rewind.utf8toutf16 (input) return process(input, "utf8toutf16", utf
 function utf8rewind.utf8toutf32 (input) return process(input, "utf8toutf32", unicod) end
 function utf8rewind.utf8towide  (input) return process(input, "utf8towide",  wchart) end
 function utf8rewind.utf8normalize(input, flags)
-    flags = flags or FLAGS.C
+    flags = flags or FORM.C
     if type(flags) == "string" then
-        flags = FLAGS[flags]
+        flags = FORM[flags]
     end
     assert(type(flags) == "number", "Invalid normalization flags supplied.")
     return process(input, "utf8normalize", nil, flags)
 end
 function utf8rewind.utf8isnormalized(input, flags)
-    flags = flags or FLAGS.C
+    flags = flags or FORM.C
     if type(flags) == "string" then
-        flags = FLAGS[upper(flags)]
+        flags = FORM[upper(flags)]
     end
     assert(type(flags) == "number", "Invalid normalization flags supplied.")
     local r = lib.utf8isnormalized(input, #input, flags, offset)
@@ -99,7 +153,22 @@ function utf8rewind.utf8isnormalized(input, flags)
         return false, true, n
     end
 end
+function utf8rewind.utf8iscategory(input, flags)
+    if type(flags) == "string" then
+        flags = FORM[upper(flags)]
+    end
+    assert(type(flags) == "number", "Invalid category flags supplied.")
+    local l = #input
+    local r = tonumber(lib.utf8iscategory(input, l, flags))
+    if l == r then
+        return true
+    else
+        return false, r + 1
+    end
+end
 function utf8rewind.utf8seek(input, offset, direction)
     return ffi_str(lib.utf8seek(input, #input, input, offset or 0, direction and 2 or 0))
 end
+utf8rewind.form     = FORM
+utf8rewind.category = CATEGORY
 return utf8rewind

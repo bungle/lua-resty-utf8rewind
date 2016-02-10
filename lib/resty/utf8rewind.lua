@@ -144,7 +144,7 @@ function utf8rewind.utf8isnormalized(input, flags)
     end
     assert(type(flags) == "number", "Invalid normalization flags supplied.")
     local r = lib.utf8isnormalized(input, #input, flags, offset)
-    local n = tonumber(offset[0])
+    local n = tonumber(offset[0]) + 1
     if r == 0 then
         return true, true, n
     elseif r == 2 then

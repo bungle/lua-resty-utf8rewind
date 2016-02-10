@@ -155,7 +155,7 @@ function utf8rewind.utf8isnormalized(input, flags)
 end
 function utf8rewind.utf8iscategory(input, flags)
     if type(flags) == "string" then
-        flags = FORM[upper(flags)]
+        flags = CATEGORY[upper(flags)]
     end
     assert(type(flags) == "number", "Invalid category flags supplied.")
     local l = #input

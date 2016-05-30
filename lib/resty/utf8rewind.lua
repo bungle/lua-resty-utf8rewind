@@ -13,11 +13,12 @@ ffi_cdef [[
 typedef uint16_t utf16_t;
 typedef uint32_t unicode_t;
 typedef int64_t off_t;
+ size_t utf8envlocale();
  size_t utf8len(const char* text);
- size_t utf8toupper(const char* input, size_t inputSize, char* target, size_t targetSize, int32_t* errors);
- size_t utf8tolower(const char* input, size_t inputSize, char* target, size_t targetSize, int32_t* errors);
- size_t utf8totitle(const char* input, size_t inputSize, char* target, size_t targetSize, int32_t* errors);
- size_t utf8casefold(const char* input, size_t inputSize, char* target, size_t targetSize, int32_t* errors);
+ size_t utf8toupper(const char* input, size_t inputSize, char* target, size_t targetSize, size_t locale, int32_t* errors);
+ size_t utf8tolower(const char* input, size_t inputSize, char* target, size_t targetSize, size_t locale, int32_t* errors);
+ size_t utf8totitle(const char* input, size_t inputSize, char* target, size_t targetSize, size_t locale, int32_t* errors);
+ size_t utf8casefold(const char* input, size_t inputSize, char* target, size_t targetSize, size_t locale, int32_t* errors);
  size_t utf16toutf8(const utf16_t* input, size_t inputSize, char* target, size_t targetSize, int32_t* errors);
  size_t utf32toutf8(const unicode_t* input, size_t inputSize, char* target, size_t targetSize, int32_t* errors);
  size_t widetoutf8(const wchar_t* input, size_t inputSize, char* target, size_t targetSize, int32_t* errors);
@@ -99,13 +100,22 @@ local CATEGORY = {
     ISBLANK                 = 1346371584,
     IGNORE_GRAPHEME_CLUSTER = 2147483648
 }
-local function process(input, func, target_t, flags)
+local function process(input, func, target_t, flags, locale)
     local t = target_t or char_t
     local l = type(input) == "cdata" and ffi_sizeof(input) or #input
-    local s = flags and lib[func](input, l, nil, 0, flags, errors) or lib[func](input, l, nil, 0, errors)
+    local s
+    if flags then
+        s = lib[func](input, l, nil, 0, flags, errors)
+    else
+        s = locale and lib[func](input, l, nil, 0, locale, errors) or lib[func](input, l, nil, 0, errors)
+    end
     if errors[0] == 0 then
         local target = ffi_new(t, s)
-        s = flags and lib[func](input, l, target, s, flags, errors) or lib[func](input, l, target, s, errors)
+        if flags then
+            s = lib[func](input, l, target, s, flags, errors)
+        else
+            s = locale and lib[func](input, l, target, s, locale, errors) or lib[func](input, l, target, s, errors)
+        end
         if errors[0] == 0 then
             if target_t then
                 return target, tonumber(s)
@@ -119,10 +129,10 @@ local function process(input, func, target_t, flags)
 end
 local utf8rewind = { maybe = {} }
 function utf8rewind.utf8len     (input) return tonumber(lib.utf8len(input))   end
-function utf8rewind.utf8toupper (input) return process(input, "utf8toupper")  end
-function utf8rewind.utf8tolower (input) return process(input, "utf8tolower")  end
-function utf8rewind.utf8totitle (input) return process(input, "utf8totitle")  end
-function utf8rewind.utf8casefold(input) return process(input, "utf8casefold") end
+function utf8rewind.utf8toupper (input, locale) return process(input, "utf8toupper",  nil, nil, locale) end
+function utf8rewind.utf8tolower (input, locale) return process(input, "utf8tolower",  nil, nil, locale) end
+function utf8rewind.utf8totitle (input, locale) return process(input, "utf8totitle",  nil, nil, locale) end
+function utf8rewind.utf8casefold(input, locale) return process(input, "utf8casefold", nil, nil, locale) end
 function utf8rewind.utf16toutf8 (input) return process(input, "utf16toutf8")  end
 function utf8rewind.utf32toutf8 (input) return process(input, "utf32toutf8")  end
 function utf8rewind.widetoutf8  (input) return process(input, "widetoutf8")   end
@@ -168,6 +178,9 @@ function utf8rewind.utf8iscategory(input, flags)
 end
 function utf8rewind.utf8seek(input, offset, direction)
     return ffi_str(lib.utf8seek(input, #input, input, offset or 0, direction and 2 or 0))
+end
+function utf8rewind.utf8envlocale()
+    return tonumber(lib.utf8envlocale())
 end
 utf8rewind.form     = FORM
 utf8rewind.category = CATEGORY

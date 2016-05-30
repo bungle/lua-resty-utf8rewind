@@ -100,7 +100,7 @@ local CATEGORY = {
     ISBLANK                 = 1346371584,
     IGNORE_GRAPHEME_CLUSTER = 2147483648
 }
-local function process(input, func, target_t, flags, locale)
+local function process(input, func, locale, target_t, flags)
     local t = target_t or char_t
     local l = type(input) == "cdata" and ffi_sizeof(input) or #input
     local s
@@ -127,25 +127,25 @@ local function process(input, func, target_t, flags, locale)
     end
     return nil, errors[0]
 end
-local utf8rewind = { maybe = {} }
-function utf8rewind.utf8len     (input) return tonumber(lib.utf8len(input))   end
-function utf8rewind.utf8toupper (input, locale) return process(input, "utf8toupper",  nil, nil, locale) end
-function utf8rewind.utf8tolower (input, locale) return process(input, "utf8tolower",  nil, nil, locale) end
-function utf8rewind.utf8totitle (input, locale) return process(input, "utf8totitle",  nil, nil, locale) end
-function utf8rewind.utf8casefold(input, locale) return process(input, "utf8casefold", nil, nil, locale) end
-function utf8rewind.utf16toutf8 (input) return process(input, "utf16toutf8")  end
-function utf8rewind.utf32toutf8 (input) return process(input, "utf32toutf8")  end
-function utf8rewind.widetoutf8  (input) return process(input, "widetoutf8")   end
-function utf8rewind.utf8toutf16 (input) return process(input, "utf8toutf16", utf16t) end
-function utf8rewind.utf8toutf32 (input) return process(input, "utf8toutf32", unicod) end
-function utf8rewind.utf8towide  (input) return process(input, "utf8towide",  wchart) end
+local utf8rewind = {}
+function utf8rewind.utf8len      (input) return tonumber(lib.utf8len(input))   end
+function utf8rewind.utf8toupper  (input, locale) return process(input, "utf8toupper",  locale) end
+function utf8rewind.utf8tolower  (input, locale) return process(input, "utf8tolower",  locale) end
+function utf8rewind.utf8totitle  (input, locale) return process(input, "utf8totitle",  locale) end
+function utf8rewind.utf8casefold (input, locale) return process(input, "utf8casefold", locale) end
+function utf8rewind.utf16toutf8  (input) return process(input, "utf16toutf8")  end
+function utf8rewind.utf32toutf8  (input) return process(input, "utf32toutf8")  end
+function utf8rewind.widetoutf8   (input) return process(input, "widetoutf8")   end
+function utf8rewind.utf8toutf16  (input) return process(input, "utf8toutf16", nil, utf16t) end
+function utf8rewind.utf8toutf32  (input) return process(input, "utf8toutf32", nil, unicod) end
+function utf8rewind.utf8towide   (input) return process(input, "utf8towide",  nil, wchart) end
 function utf8rewind.utf8normalize(input, flags)
     flags = flags or FORM.C
     if type(flags) == "string" then
         flags = FORM[flags]
     end
     assert(type(flags) == "number", "Invalid normalization flags supplied.")
-    return process(input, "utf8normalize", nil, flags)
+    return process(input, "utf8normalize", nil, nil, flags)
 end
 function utf8rewind.utf8isnormalized(input, flags)
     flags = flags or FORM.C
